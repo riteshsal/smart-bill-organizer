@@ -209,7 +209,7 @@ if "result" in st.session_state:
             }
 
             # Make webhook
-            webhook_url = "https://hook.eu1.make.com/hbzuuof8n9jgcd2d5v8a7ejovyb2hjnx"
+            webhook_url = os.getenv("MAKE_WEBHOOK_URL")
 
             response = requests.post(
                 webhook_url,
