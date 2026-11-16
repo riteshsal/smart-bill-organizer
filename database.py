@@ -39,7 +39,44 @@ def insert_bill(bill_data):
     conn = get_connection()
     cursor = conn.cursor()
 
-    due_date = datetime.strptime(bill_data["due_date"], "%d-%m-%Y").date()
+    due_date = datetime.strptime(
+        bill_data["due_date"],
+        "%d-%m-%Y"
+    ).date()
+
+    # Check if the bill already exists
+    cursor.execute("""
+        SELECT id
+        FROM bills
+        WHERE provider = %s
+        AND bill_type = %s
+        AND customer_name = %s
+        AND bill_number = %s
+        AND account_number = %s
+        AND amount = %s
+        AND due_date = %s
+        AND billing_period = %s
+        AND notification_email = %s
+    """, (
+        bill_data["provider"],
+        bill_data["bill_type"],
+        bill_data["customer_name"],
+        bill_data["bill_number"],
+        bill_data["account_number"],
+        bill_data["amount"],
+        due_date,
+        bill_data["billing_period"],
+        bill_data["user_email"]
+    ))
+
+    existing_bill = cursor.fetchone()
+
+    if existing_bill:
+        cursor.close()
+        conn.close()
+        return False
+
+    # Insert new bill
     cursor.execute("""
         INSERT INTO bills (
             provider,
@@ -70,6 +107,8 @@ def insert_bill(bill_data):
     conn.commit()
     cursor.close()
     conn.close()
+
+    return True
 
 
 def get_bills(user_email):

@@ -211,11 +211,13 @@ if "result" in st.session_state:
                 "user_email": user_email
             }
 
-            # Save to database
-            insert_bill(bill_data)
-            
-            st.success("Bill confirmed and saved successfully!")
-            st.json(bill_data)
+            saved = insert_bill(bill_data)
+
+            if saved:
+                st.success("Bill confirmed and saved successfully!")
+                st.json(bill_data)
+            else:
+                st.warning("This bill is already saved in the database.")
 
 st.subheader("📋 Saved Bills")
 
