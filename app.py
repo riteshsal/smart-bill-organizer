@@ -2,11 +2,11 @@ import os
 import base64
 import json
 import requests
-
+from database import insert_bill,get_bills
 import streamlit as st
 from dotenv import load_dotenv
 from groq import Groq
-
+from datetime import datetime
 load_dotenv()
 
 client = Groq(api_key=os.getenv("GROQ_API_KEY"))
@@ -182,15 +182,18 @@ if "result" in st.session_state:
         result.get("billing_period") or ""
     )
 
-    notification_email = st.text_input(
-        "Email for reminder",
-        placeholder="your@email.com"
-    )
+    user_email = st.text_input(
+                "Email for reminder",
+                placeholder="your@email.com"
+            )
+
+    if user_email:
+        st.session_state["user_email"] = user_email
 
     # Confirm and send to Make
     if st.button("Confirm Bill"):
 
-        if not notification_email:
+        if not user_email:
 
             st.error("Please enter an email address.")
 
@@ -205,9 +208,12 @@ if "result" in st.session_state:
                 "amount": amount,
                 "due_date": due_date,
                 "billing_period": billing_period,
-                "notification_email": notification_email
+                "user_email": user_email
             }
 
+            # Save to database
+            insert_bill(bill_data)
+            
             # Make webhook
             webhook_url = os.getenv("MAKE_WEBHOOK_URL")
 
@@ -233,3 +239,42 @@ if "result" in st.session_state:
                 st.error(
                     "Failed to send bill to automation."
                 )
+
+
+st.subheader("📋 Saved Bills")
+
+user_email = st.session_state.get("user_email")
+
+if user_email:
+    bills = get_bills(user_email)
+
+    if bills:
+        bill_data = []
+
+        for bill in bills:
+            bill_data.append({
+                "ID": bill[0],
+                "Provider": bill[1],
+                "Bill Type": bill[2],
+                "Amount": bill[3],
+                "Due Date": bill[4],
+                "Email": bill[5],
+                "Status": (
+                "Overdue"
+                if bill[4] < datetime.now().date()
+                else "Due Today"
+                if bill[4] == datetime.now().date()
+                else "Upcoming"
+              ),
+                "Created At": bill[7]
+            })
+
+        st.dataframe(
+            bill_data,
+            use_container_width=True
+        )
+
+    else:
+        st.info("No bills saved yet.")
+else:
+    st.info("Enter your email to view your saved bills.")
