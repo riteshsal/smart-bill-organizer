@@ -214,32 +214,8 @@ if "result" in st.session_state:
             # Save to database
             insert_bill(bill_data)
             
-            # Make webhook
-            webhook_url = os.getenv("MAKE_WEBHOOK_URL")
-
-            response = requests.post(
-                webhook_url,
-                json=bill_data,
-                timeout=10
-            )
-
-            st.write("Status:", response.status_code)
-            st.write("Response:", response.text)
-
-            if response.status_code == 200:
-
-                st.success(
-                    "Bill confirmed and sent to automation!"
-                )
-
-                st.json(bill_data)
-
-            else:
-
-                st.error(
-                    "Failed to send bill to automation."
-                )
-
+            st.success("Bill confirmed and saved successfully!")
+            st.json(bill_data)
 
 st.subheader("📋 Saved Bills")
 
