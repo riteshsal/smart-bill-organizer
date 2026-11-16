@@ -71,6 +71,7 @@ def insert_bill(bill_data):
 
     existing_bill = cursor.fetchone()
 
+    print("EXISTING BILL:", existing_bill)
     if existing_bill:
         cursor.close()
         conn.close()
